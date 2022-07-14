@@ -19,9 +19,12 @@ function getReleaseVersion(meta) {
 
 class PackageInfo extends BasePackageInfo {
   emit(objects) {
-    this.package = _upperFirst(_camelCase(_name(this.config.name)));
-    this.scope = _upperFirst(_camelCase(_name(this.config.scope)));
-    this.namespace = `${this.scope}_${this.package}`;
+    this.packageInfo = this.config.packageInfo || {};
+    this.name = this.config.name;
+    this.scope = this.config.scope;
+    this.package = this.packageInfo.name ?
+      _upperFirst(_camelCase(_name(this.packageInfo.name)))
+      : _upperFirst(_camelCase(_name(`${this.scope}_${this.name}`)));
     const object = objects.find(obj => obj.type === 'client');
     this.client = object;
     this.imports = [];
@@ -39,20 +42,20 @@ class PackageInfo extends BasePackageInfo {
   tests() {
     this.renderAuto(
       path.join(__dirname, './files/XCTestManifests.swift.tmpl'),
-      path.join(this.config.dir, `Tests/${this.namespace}/XCTestManifests.swift`), {
-        name: this.namespace
+      path.join(this.config.dir, `Tests/${this.package}/XCTestManifests.swift`), {
+        name: this.package
       }
     );
     this.renderAuto(
       path.join(__dirname, './files/TestCase.swift.tmpl'),
-      path.join(this.config.dir, `Tests/${this.namespace}/${this.namespace}Tests.swift`), {
-        name: this.namespace
+      path.join(this.config.dir, `Tests/${this.package}/${this.package}Tests.swift`), {
+        name: this.package
       }
     );
     this.renderAuto(
       path.join(__dirname, './files/LinuxMain.swift.tmpl'),
       path.join(this.config.dir, 'Tests/LinuxMain.swift'), {
-        name: this.namespace
+        name: this.package
       }
     );
   }
@@ -78,7 +81,7 @@ class PackageInfo extends BasePackageInfo {
       const meta = item.meta;
       let version = getReleaseVersion(meta);
       if (meta.github) {
-        emitter.emitln(`github ${meta.github.orgs}/${meta.github.repo} ~> ${version}`);
+        emitter.emitln(`github ${meta.github.replace('https://github.com/', '').replace('http://github.com/', '').replace('.git', '')} ~> ${version}`);
       } else {
         emitter.emitln(`github ${item.scope}/${item.package_name} ~> ${version}`);
       }
@@ -97,21 +100,21 @@ class PackageInfo extends BasePackageInfo {
       const meta = item.meta;
       let version = getReleaseVersion(meta);
       if (meta.github) {
-        emitter.emitln(`.package(url: "https://github.com/${meta.github.orgs}/${meta.github.repo}.git", from: "${version}"),`, 3);
+        emitter.emitln(`.package(url: "${meta.github}", from: "${version}"),`, 3);
       } else {
         emitter.emitln(`.package(url: "https://github.com/${item.scope}/${item.package_name}.git", from: "${version}"),`, 3);
       }
-      items.push(`"${_upperFirst(_camelCase(_name(item.scope)))}_${_upperFirst(_camelCase(_name(item.package_name)))}"`);
+      items.push(`"${_upperFirst(_camelCase(_name(item.package_name)))}"`);
     });
     emitter.emit(']', 2);
     let depen = items.join(', ');
     if (this.config.withTest) {
-      items.unshift(`"${this.namespace}"`);
+      items.unshift(`"${this.package}"`);
       let depenTest = items.join(', ');
       this.renderAuto(
         path.join(__dirname, './files/Package-test.swift.tmpl'),
         path.join(this.config.dir, 'Package.swift'), {
-          name: this.namespace,
+          name: this.package,
           SwiftPackageDependencies: emitter.output,
           SwiftPackageDependenciesNamespace: depen,
           SwiftPackageTestDependenciesNamespace: depenTest
@@ -121,7 +124,7 @@ class PackageInfo extends BasePackageInfo {
       this.renderAuto(
         path.join(__dirname, './files/Package.swift.tmpl'),
         path.join(this.config.dir, 'Package.swift'), {
-          name: this.namespace,
+          name: this.package,
           SwiftPackageDependencies: emitter.output,
           SwiftPackageDependenciesNamespace: depen
         }
@@ -130,17 +133,9 @@ class PackageInfo extends BasePackageInfo {
   }
 
   podspec() {
-    let orgs = this.config.scope;
-    let repo = this.config.name;
-    if (this.config.github && this.config.github.orgs) {
-      orgs = this.config.github.orgs;
-    }
-    if (this.config.github && this.config.github.repo) {
-      repo = this.config.github.repo;
-    }
-    let author = `"${_upperFirst(this.config.scope)}" => ""`;
-    if (this.config.maintainers && this.config.maintainers.name && this.config.maintainers.email) {
-      author = `"${this.config.maintainers.name}" => "${this.config.maintainers.email}"`;
+    let author = `"${_upperFirst(this.scope)}" => ""`;
+    if (this.packageInfo.author && this.packageInfo.email) {
+      author = `"${this.packageInfo.author}" => "${this.packageInfo.email}"`;
     }
 
     let emitter = new Emitter(this.config);
@@ -149,17 +144,17 @@ class PackageInfo extends BasePackageInfo {
       const item = this.dependencies[key];
       const meta = item.meta;
       let version = getReleaseVersion(meta);
-      let package_name = `${_upperFirst(_camelCase(_name(item.scope)))}_${_upperFirst(_camelCase(_name(item.package_name)))}`;
+      let package_name = `${_upperFirst(_camelCase(_name(item.package_name)))}`;
       emitter.emitln(`  spec.dependency '${package_name}',  '~> ${version}'`);
     });
 
     this.renderAuto(
       path.join(__dirname, './files/podspec.tmpl'),
-      path.join(this.config.dir, `${this.namespace}.podspec`), {
-        name: this.namespace,
+      path.join(this.config.dir, `${this.package}.podspec`), {
+        name: this.package,
         version: this.config.version,
-        desc: `${this.scope} ${this.package} SDK for Swift`,
-        homepage: `https://github.com/${orgs}/${repo}.git`,
+        desc: this.packageInfo.desc || `${this.scope} ${this.package} SDK for Swift`,
+        homepage: this.packageInfo.github || `https://github.com/${this.scope}/${this.package}.git`,
         author: author,
         podspecDependencies: emitter.output
       }

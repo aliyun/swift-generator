@@ -1,7 +1,7 @@
 import Foundation
 
-open class Client : Darabonba_Import.Client {
-    init(_ config: Darabonba_Import.Config) {
+open class Client : DarabonbaImport.Client {
+    init(_ config: DarabonbaImport.Config) {
         super.init(config)
     }
 }

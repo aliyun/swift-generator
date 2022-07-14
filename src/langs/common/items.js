@@ -189,18 +189,19 @@ class GrammerVar extends Grammer {
 }
 
 class GrammerExpr extends Grammer {
-  constructor(left = null, opt = '', right = '') {
+  constructor(left = null, opt = '', right = '', as = '') {
     super();
     this.left = left;    // GrammerVar
     this.opt = opt;
     this.right = right;
+    this.as = as;
     this.setBelongTo(left, this.index);
     this.setBelongTo(right, this.index);
   }
 }
 
 class GrammerCall extends Grammer {
-  constructor(type = 'method', path = [], params = [], returnType = null, hasThrow = false) {
+  constructor(type = 'method', path = [], params = [], returnType = null, hasThrow = false, isAsync = false) {
     super();
     this.type = type;     // method | key | index | prop | sys_func | super
     this.path = [];
@@ -213,6 +214,7 @@ class GrammerCall extends Grammer {
     }
     this.returnType = returnType;  // TypeItem
     this.hasThrow = hasThrow;
+    this.isAsync = isAsync;
     assert.strictEqual(true, this.returnType instanceof TypeItem);
   }
 

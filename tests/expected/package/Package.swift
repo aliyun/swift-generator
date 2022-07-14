@@ -3,18 +3,19 @@
 import PackageDescription
 
 let package = Package(
-        name: "Darabonba_Main",
+        name: "Package",
         products: [
             .library(
-                    name: "Darabonba_Main",
-                    targets: ["Darabonba_Main"])
+                    name: "Package",
+                    targets: ["Package"])
         ],
         dependencies: [
             // Dependencies declare other packages that this package depends on.
         ],
         targets: [
             .target(
-                    name: "Darabonba_Main",
+                    name: "Package",
                     dependencies: []),
-        ]
+        ],
+        swiftLanguageVersions: [.v5]
 )

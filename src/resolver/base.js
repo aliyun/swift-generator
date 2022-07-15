@@ -134,7 +134,7 @@ class BaseResolver {
     }
   }
 
-  resolveTypeItem(typeNode, sourceNode = null) {
+  resolveTypeItem(typeNode, sourceNode = null, prop) {
     if (typeNode.idType) {
       if (typeNode.idType === 'model') {
         return new TypeObject(`#${typeNode.lexeme}`);
@@ -152,7 +152,7 @@ class BaseResolver {
           }
           return new TypeObject(`#${typeNode.fieldType.lexeme}`);
         }
-        return this.resolveTypeItem(typeNode.fieldType, typeNode);
+        return this.resolveTypeItem(typeNode.fieldType, typeNode, prop);
       } else if (typeNode.type === 'modelBody') {
         // is sub model
         const modelName = `#${[this.object.name, sourceNode.fieldName.lexeme].join('.')}`;
@@ -201,11 +201,11 @@ class BaseResolver {
     } else if (typeNode === 'array') {
       let itemType;
       if (sourceNode.fieldItemType.type === 'modelBody') {
-        itemType = new TypeObject(`#${sourceNode.itemType}`);
+        itemType = new TypeObject(`#${sourceNode.itemType ? sourceNode.itemType : prop}`);
       } else if (sourceNode.fieldItemType.idType === 'model') {
         itemType = new TypeObject(`#${sourceNode.fieldItemType.lexeme}`);
       } else {
-        itemType = this.resolveTypeItem(sourceNode.fieldItemType, sourceNode);
+        itemType = this.resolveTypeItem(sourceNode.fieldItemType, sourceNode, sourceNode.itemType ? sourceNode.itemType : prop);
       }
       return new TypeArray(itemType);
     } else if (typeNode === 'map') {

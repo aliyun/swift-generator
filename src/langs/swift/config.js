@@ -59,20 +59,26 @@ module.exports = {
   },
   tea: {
     core: {
-      name: 'Darabonba',
+      name: 'Tea.TeaCore',
       doAction: 'doAction',
       allowRetry: 'allowRetry',
       sleep: 'sleep',
       getBackoffTime: 'getBackoffTime',
-      isRetryable: 'isRetryable'
+      isRetryable: 'isRetryable',
+      toReadable: 'toReadable',
+      timeNow: 'timeNow',
     },
-    model: { name: 'Tea.Model' },
+    model: { name: 'Tea.TeaModel' },
     stream: { name: 'Stream' },
-    error: {name: 'Tea.ClientError'},
-    converter: { name: 'Tea.Converter' },
-    response: { name: 'Tea.Response' },
-    request: { name: 'Tea.Resquest' },
-    exception: { name: 'Tea.SDKRuntimeError' },
-    exceptionUnretryable: { name: 'Tea.RequestUnretryableError' },
+    error: { name: 'Tea.ReuqestError' },
+    converter: {
+      name: 'Tea.TeaConverter',
+      merge: 'merge'
+    },
+    response: { name: 'Tea.TeaResponse' },
+    request: { name: 'Tea.TeaRequest' },
+    exception: { name: 'Tea.TeaError' },
+    exceptionRetryable: { name: 'Tea.RetryableError' },
+    exceptionUnretryable: { name: 'Tea.UnretryableError' },
   }
 };

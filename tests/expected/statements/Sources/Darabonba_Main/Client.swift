@@ -4,27 +4,28 @@ open class Client {
     init() {
     }
 
-    public func hello() -> Void {
-        var _request: Tea.Resquest = Tea.Resquest()
-        __request.method = "GET"
-        __request.pathname = "/"
-        __request.headers = [
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func hello() async throws -> Void {
+        var _request: Tea.TeaRequest = Tea.TeaRequest()
+        _request.method = "GET"
+        _request.pathname = "/"
+        _request.headers = [
             "host": "www.test.com"
         ]
         if (true) {
-            __request.headers["host"] = "www.test2.com";
+            _request.headers["host"] = "www.test2.com";
         }
-        var _lastRequest: Tea.Resquest = _request
-        var _response: Tea.Response= Darabonba::doAction(_request)
+        var _lastRequest: Tea.TeaRequest = _request
+        var _response: Tea.TeaResponse = try await Tea.TeaCore.doAction(_request)
         if (true) {
-            throw TeaError.runtimeError(_request, _response)
+            throw Tea.RetryableError()
         }
         else {
             true
         }
         super.helloIf()
         !false
-        var a: String = nil
+        var a: String? = nil
         a = "string"
         return nil
     }
@@ -36,8 +37,8 @@ open class Client {
         else {}
     }
 
-    public static func helloThrow() -> Void {
-        throw Tea.ClientError([])
+    public static func helloThrow() throws -> Void {
+        throw Tea.ReuqestError([:])
     }
 
     public static func helloForBreak() -> Void {
@@ -54,7 +55,7 @@ open class Client {
 
     public static func helloDeclare() -> Void {
         var hello: String = "world"
-        var helloNull: String = nil
+        var helloNull: String? = nil
         hello = "hehe"
     }
 }

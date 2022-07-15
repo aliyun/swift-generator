@@ -1,19 +1,19 @@
 import Foundation
 
-public class M : Tea.Model {
-    public class SubM : Tea.Model {
+public class M : Tea.TeaModel {
+    public class SubM : Tea.TeaModel {
     }
     public var subM: M.SubM?
 }
 
-public class Class_ : Tea.Model {
+public class Class_ : Tea.TeaModel {
 }
 
-public class MyModel : Tea.Model {
-    public class Submodel : Tea.Model {
+public class MyModel : Tea.TeaModel {
+    public class Submodel : Tea.TeaModel {
         public var stringfield: String?
     }
-    public class Subarraymodel : Tea.Model {
+    public class Subarraymodel : Tea.TeaModel {
     }
     public var stringfield: String?
 
@@ -37,13 +37,13 @@ public class MyModel : Tea.Model {
 
     public var maparray: [[String:Any]]?
 
-    public var moduleModelMap: [String:Darabonba_Import.Request]?
+    public var moduleModelMap: [String:DarabonbaImport.Request]?
 
     public var subModelMap: [String:M.SubM]?
 
     public var modelMap: [String:M]?
 
-    public var moduleMap: [String:Darabonba_Import.Client]?
+    public var moduleMap: [String:DarabonbaImport.Client]?
 
     public var object: [String:Any]?
 
@@ -53,7 +53,7 @@ public class MyModel : Tea.Model {
 
     public var existModel: M?
 
-    public var request: Tea.Resquest?
+    public var request: Tea.TeaRequest?
 
     public var complexList: [[String]]?
 

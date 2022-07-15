@@ -5,5 +5,15 @@
   "main": "./main.dara",
   "libraries": {
     "Source": "darabonba:Import:*"
+  },
+  "swift": {
+    "clientName": "Client",
+    "packageInfo": {
+      "name": "Package",
+      "desc": "Darabonba Package SDK",
+      "github": "https://github.com/aliyun/package",
+      "author": "Alibaba Cloud SDK",
+      "email": "sdk-team@alibabacloud.com"
+    }
   }
 }

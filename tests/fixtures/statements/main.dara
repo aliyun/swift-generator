@@ -33,6 +33,14 @@ static function helloDeclare() : void {
   hello = "hehe";
 }
 
+// static function trycatch() : void {
+//   try {
+//     var a = 'test';
+//   } catch (error) {
+//     var b = 'test';
+//   }
+// }
+
 init();
 
 api hello(): void {

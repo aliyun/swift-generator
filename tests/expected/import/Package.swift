@@ -3,19 +3,20 @@
 import PackageDescription
 
 let package = Package(
-        name: "Darabonba_Main",
+        name: "Package",
         products: [
             .library(
-                    name: "Darabonba_Main",
-                    targets: ["Darabonba_Main"])
+                    name: "Package",
+                    targets: ["Package"])
         ],
         dependencies: [
             // Dependencies declare other packages that this package depends on.
-            .package(url: "https://github.com/darabonba/import.git", from: "0.0.1"),
+            .package(url: "https://github.com/darabonba/Import.git", from: "0.0.1"),
         ],
         targets: [
             .target(
-                    name: "Darabonba_Main",
-                    dependencies: ["Darabonba_Import"]),
-        ]
+                    name: "Package",
+                    dependencies: ["Import"]),
+        ],
+        swiftLanguageVersions: [.v5]
 )

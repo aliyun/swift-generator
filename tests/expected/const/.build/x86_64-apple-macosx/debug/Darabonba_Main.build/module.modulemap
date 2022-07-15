@@ -1,0 +1,4 @@
+module Darabonba_Main {
+    header "/Users/dyn/AliGitRepo/swift-generator/tests/expected/const/.build/x86_64-apple-macosx/debug/Darabonba_Main.build/Darabonba_Main-Swift.h"
+    requires objc
+}

@@ -63,7 +63,7 @@ module.exports = {
       doAction: 'doAction',
       allowRetry: 'allowRetry',
       sleep: 'sleep',
-      getBackoffTime: 'getBackoffTime',
+      getBackoffTime: 'getBackoffDelay',
       isRetryable: 'isRetryable',
       toReadable: 'toReadable',
       timeNow: 'timeNow',

@@ -323,6 +323,7 @@ class ClientResolver extends BaseResolver {
             { type: 'map', name: 'backoff' }
           ]), genericType),
           new GrammerValue('param', '_retryTimes', int32),
+          new GrammerValue('param', '_lastException', exceptionType),
         ], int32)
       )
     );
@@ -377,7 +378,7 @@ class ClientResolver extends BaseResolver {
           new GrammerVar('_lastException', exceptionType, 'var'),
           Symbol.assign(),
           exceptionVar,
-          new GrammerVar('error', retryableType)
+          new GrammerVar('error', exceptionType)
         ),
         new GrammerContinue(whileOperation.index)
       ]),

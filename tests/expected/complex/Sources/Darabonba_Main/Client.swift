@@ -28,7 +28,7 @@ open class Client : DarabonbaImport.Client {
         var _retryTimes: Int32 = 0
         while (Tea.TeaCore.allowRetry(_runtime["retry"], _retryTimes, _now)) {
             if (_retryTimes > 0) {
-                var _backoffTime: Int32 = Tea.TeaCore.getBackoffTime(_runtime["backoff"], _retryTimes)
+                var _backoffTime: Int32 = Tea.TeaCore.getBackoffDelay(_runtime["backoff"], _retryTimes, _lastException)
                 if (_backoffTime > 0) {
                     Tea.TeaCore.sleep(_backoffTime)
                 }
@@ -134,7 +134,7 @@ open class Client : DarabonbaImport.Client {
             }
             catch {
                 if (Tea.TeaCore.isRetryable(error)) {
-                    _lastException = error as! Tea.RetryableError
+                    _lastException = error as! Tea.TeaError
                     continue
                 }
                 throw error
@@ -173,7 +173,7 @@ open class Client : DarabonbaImport.Client {
         var _retryTimes: Int32 = 0
         while (Tea.TeaCore.allowRetry(_runtime["retry"], _retryTimes, _now)) {
             if (_retryTimes > 0) {
-                var _backoffTime: Int32 = Tea.TeaCore.getBackoffTime(_runtime["backoff"], _retryTimes)
+                var _backoffTime: Int32 = Tea.TeaCore.getBackoffDelay(_runtime["backoff"], _retryTimes, _lastException)
                 if (_backoffTime > 0) {
                     Tea.TeaCore.sleep(_backoffTime)
                 }
@@ -186,7 +186,7 @@ open class Client : DarabonbaImport.Client {
             }
             catch {
                 if (Tea.TeaCore.isRetryable(error)) {
-                    _lastException = error as! Tea.RetryableError
+                    _lastException = error as! Tea.TeaError
                     continue
                 }
                 throw error

@@ -65,7 +65,6 @@ const exceptionType = new TypeObject('$Exception');
 const requestType = new TypeObject('$Request');
 const nullType = new TypeNull();
 const unretryableType = new TypeObject('$ExceptionUnretryable');
-const retryableType = new TypeObject('$ExceptionRetryable');
 
 class ClientResolver extends BaseResolver {
   constructor(astNode, combinator, globalAst) {

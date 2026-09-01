@@ -246,6 +246,10 @@ class ClientResolver extends BaseResolver {
   }
 
   runtimeMode(func, ast, body) {
+    const intType = new TypeInteger();
+    const responseType = new TypeObject('$Response');
+    const contextType = new TypeObject('$RetryPolicyContext');
+
     var val = new GrammerValue('array', []);
     this.renderGrammerValue(val, ast.runtimeBody);
     if (ast.runtimeBody.tokenRange) {
@@ -266,73 +270,79 @@ class ClientResolver extends BaseResolver {
       new GrammerValue('null', null, nullType)
     ));
 
-    // _lastException = null;
+    // _lastResponse = null;
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_lastException', exceptionType, 'var', false, true),
+      new GrammerVar('_lastResponse', responseType, 'var', false, true),
       Symbol.assign(),
       new GrammerValue('null', null, nullType)
     ));
 
-    // _now = Date.now();
+    // var _retriesAttempted: Int = 0
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_now', int32),
+      new GrammerVar('_retriesAttempted', intType, 'var'),
       Symbol.assign(),
-      new GrammerValue('behavior', new BehaviorTimeNow(), int32)
+      new GrammerValue('number', 0, intType)
     ));
 
-    // let _retryTimes = 0;
+    // var _context = TeaCore.retryPolicyContext(retriesAttempted: 0)
     func.addBodyNode(new GrammerExpr(
-      new GrammerVar('_retryTimes', int32, 'var'),
+      new GrammerVar('_context', contextType, 'var'),
       Symbol.assign(),
-      new GrammerValue('number', 0, int32)
+      new GrammerCall('method', [
+        { type: 'object_static', name: '$Core' },
+        { type: 'call_static', name: this.config.tea.core.retryPolicyContext }
+      ], [
+        new GrammerValue('param', '_retriesAttempted', intType),
+      ], contextType)
     ));
 
+    // while (TeaCore.shouldRetry(_runtime["retryOptions"], _context))
     let whileOperation = new GrammerCondition('while');
     whileOperation.addCondition(
       new GrammerCall('method', [
         { type: 'object_static', name: '$Core' },
-        { type: 'call_static', name: this.config.tea.core.allowRetry }
+        { type: 'call_static', name: this.config.tea.core.shouldRetry }
       ], [
         new GrammerValue('call', new GrammerCall('key', [
           { type: 'object', name: this.config.runtime },
-          { type: 'map', name: 'retry' }
+          { type: 'map', name: 'retryOptions' }
         ], [], genericType)),
-        new GrammerValue('param', '_retryTimes', int32),
-        new GrammerValue('param', '_now', int32),
+        new GrammerValue('param', '_context', contextType),
       ], new TypeBool())
     );
 
+    // if (_retriesAttempted > 0) { backoff... }
     let retryTimesIf = new GrammerCondition('if');
     retryTimesIf.addCondition(
       new GrammerExpr(
-        new GrammerVar('_retryTimes', int32),
+        new GrammerVar('_retriesAttempted', intType),
         Symbol.greater(),
-        new GrammerValue('number', 0, int32)
+        new GrammerValue('number', 0, intType)
       )
     );
     retryTimesIf.addBodyNode(
       new GrammerExpr(
-        new GrammerVar('_backoffTime', int32),
+        new GrammerVar('_backoffTime', intType),
         Symbol.assign(),
         new GrammerCall('method', [
           { type: 'object_static', name: '$Core' },
-          { type: 'call_static', name: this.config.tea.core.getBackoffTime }
+          { type: 'call_static', name: this.config.tea.core.getBackoffDelay }
         ], [
           new GrammerValue('call', new GrammerCall('key', [
             { type: 'object', name: this.config.runtime },
-            { type: 'map', name: 'backoff' }
+            { type: 'map', name: 'retryOptions' }
           ]), genericType),
-          new GrammerValue('param', '_retryTimes', int32),
-        ], int32)
+          new GrammerValue('param', '_context', contextType),
+        ], intType)
       )
     );
 
     let backoffTimeIf = new GrammerCondition('if');
-    let backoffTimeValue = new GrammerValue('number', 0, int32);
-    backoffTimeValue.dataType = int32;
+    let backoffTimeValue = new GrammerValue('number', 0, intType);
+    backoffTimeValue.dataType = intType;
     backoffTimeIf.addCondition(
       new GrammerExpr(
-        new GrammerVar('_backoffTime', int32),
+        new GrammerVar('_backoffTime', intType),
         Symbol.greater(),
         backoffTimeValue
       )
@@ -342,20 +352,21 @@ class ClientResolver extends BaseResolver {
         { type: 'object_static', name: '$Core' },
         { type: 'call_static', name: this.config.tea.core.sleep }
       ], [
-        new GrammerValue('param', '_backoffTime', int32),
+        new GrammerValue('param', '_backoffTime', intType),
       ])
     );
 
     retryTimesIf.addBodyNode(backoffTimeIf);
     whileOperation.addBodyNode(retryTimesIf);
 
-    let retryTimesValue = new GrammerValue('number', 1, int32);
-    retryTimesValue.dataType = int32;
+    // _retriesAttempted = _retriesAttempted + 1
+    let retryTimesValue = new GrammerValue('number', 1, intType);
+    retryTimesValue.dataType = intType;
     whileOperation.addBodyNode(new GrammerExpr(
-      new GrammerVar('_retryTimes', int32),
+      new GrammerVar('_retriesAttempted', intType),
       Symbol.assign(),
       new GrammerExpr(
-        new GrammerVar('_retryTimes', int32),
+        new GrammerVar('_retriesAttempted', intType),
         Symbol.plus(),
         retryTimesValue
       )
@@ -363,25 +374,24 @@ class ClientResolver extends BaseResolver {
 
     let requestTryCatch = new GrammerTryCatch();
     let exceptionVar = new GrammerVar('error', exceptionType);
-    let exceptionParam = new GrammerValue('var', exceptionVar, exceptionType);
     let catchException = new GrammerException(null, exceptionVar);
 
+    // catch { update context; continue }
     let tryCatch = new GrammerCatch([
-      new GrammerCondition('if', [
+      new GrammerExpr(
+        new GrammerVar('_context', contextType, 'var'),
+        Symbol.assign(),
         new GrammerCall('method', [
           { type: 'object_static', name: '$Core' },
-          { type: 'call_static', name: this.config.tea.core.isRetryable }
-        ], [exceptionVar])
-      ], [
-        new GrammerExpr(
-          new GrammerVar('_lastException', exceptionType, 'var'),
-          Symbol.assign(),
-          exceptionVar,
-          new GrammerVar('error', retryableType)
-        ),
-        new GrammerContinue(whileOperation.index)
-      ]),
-      new GrammerThrows(null, [exceptionParam])
+          { type: 'call_static', name: this.config.tea.core.retryPolicyContext }
+        ], [
+          new GrammerValue('param', '_retriesAttempted', intType),
+          new GrammerValue('param', 'error', exceptionType),
+          new GrammerValue('param', '_lastRequest', requestType),
+          new GrammerValue('param', '_lastResponse', responseType),
+        ], contextType)
+      ),
+      new GrammerContinue(whileOperation.index)
     ], catchException);
     this.currThrows['$Error'] = errorType;
     this.currThrows['$Exception'] = exceptionType;
@@ -392,11 +402,12 @@ class ClientResolver extends BaseResolver {
 
     func.addBodyNode(whileOperation);
 
+    // throw TeaErrors.newUnretryableError(_context) — keep UnretryableError(request, exception) for combinator compatibility
     func.addBodyNode(
       new GrammerThrows(
         unretryableType, [
           new GrammerValue('var', new GrammerVar('_lastRequest', requestType), requestType),
-          new GrammerValue('var', new GrammerVar('_lastException', exceptionType), exceptionType)
+          new GrammerValue('var', new GrammerVar('_context', contextType), contextType)
         ]
       )
     );

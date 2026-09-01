@@ -34,12 +34,13 @@ public class Test1 : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("test") {
-            self.test = dict["test"] as! String
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["test"] as? String {
+            self.test = value
         }
-        if dict.keys.contains("test2") {
-            self.test2 = dict["test2"] as! String
+        if let value = dict["test2"] as? String {
+            self.test2 = value
         }
     }
 }
@@ -76,12 +77,13 @@ public class Test2 : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("test") {
-            self.test = dict["test"] as! String
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["test"] as? String {
+            self.test = value
         }
-        if dict.keys.contains("test2") {
-            self.test2 = dict["test2"] as! String
+        if let value = dict["test2"] as? String {
+            self.test2 = value
         }
     }
 }
@@ -120,12 +122,13 @@ public class Test3 : Tea.TeaModel {
         return map
     }
 
-    public override func fromMap(_ dict: [String: Any]) -> Void {
-        if dict.keys.contains("test") {
-            self.test = dict["test"] as! String
+    public override func fromMap(_ dict: [String: Any?]?) -> Void {
+        guard let dict else { return }
+        if let value = dict["test"] as? String {
+            self.test = value
         }
-        if dict.keys.contains("test1") {
-            self.test1 = dict["test1"] as! String
+        if let value = dict["test1"] as? String {
+            self.test1 = value
         }
     }
 }

@@ -11,17 +11,17 @@ open class Client {
     public func testAPI() async throws -> Void {
         var _runtime: [String: Any] = [:]
         var _lastRequest: Tea.TeaRequest? = nil
-        var _lastException: Tea.TeaError? = nil
-        var _now: Int32 = Tea.TeaCore.timeNow()
-        var _retryTimes: Int32 = 0
-        while (Tea.TeaCore.allowRetry(_runtime["retry"], _retryTimes, _now)) {
-            if (_retryTimes > 0) {
-                var _backoffTime: Int32 = Tea.TeaCore.getBackoffTime(_runtime["backoff"], _retryTimes)
+        var _lastResponse: Tea.TeaResponse? = nil
+        var _retriesAttempted: Int = 0
+        var _context: Tea.RetryPolicyContext = Tea.TeaCore.retryPolicyContext(_retriesAttempted)
+        while (Tea.TeaCore.shouldRetry(_runtime["retryOptions"], _context)) {
+            if (_retriesAttempted > 0) {
+                var _backoffTime: Int = Tea.TeaCore.getBackoffDelay(_runtime["retryOptions"], _context)
                 if (_backoffTime > 0) {
                     Tea.TeaCore.sleep(_backoffTime)
                 }
             }
-            _retryTimes = _retryTimes + 1
+            _retriesAttempted = _retriesAttempted + 1
             do {
                 var _request: Tea.TeaRequest = Tea.TeaRequest()
                 _lastRequest = _request
@@ -29,14 +29,11 @@ open class Client {
                 return nil
             }
             catch {
-                if (Tea.TeaCore.isRetryable(error)) {
-                    _lastException = error as! Tea.RetryableError
-                    continue
-                }
-                throw error
+                _context = Tea.TeaCore.retryPolicyContext(_retriesAttempted, error, _lastRequest, _lastResponse)
+                continue
             }
         }
-        throw Tea.UnretryableError(_lastRequest, _lastException)
+        throw Tea.UnretryableError(_lastRequest, _context)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

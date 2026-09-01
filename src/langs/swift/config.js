@@ -62,11 +62,15 @@ module.exports = {
       name: 'Tea.TeaCore',
       doAction: 'doAction',
       allowRetry: 'allowRetry',
+      shouldRetry: 'shouldRetry',
       sleep: 'sleep',
       getBackoffTime: 'getBackoffTime',
+      getBackoffDelay: 'getBackoffDelay',
+      retryPolicyContext: 'retryPolicyContext',
       isRetryable: 'isRetryable',
       toReadable: 'toReadable',
       timeNow: 'timeNow',
+      newUnretryableError: 'TeaErrors.newUnretryableError',
     },
     model: {
       name: 'Tea.TeaModel',
@@ -85,5 +89,6 @@ module.exports = {
     exception: { name: 'Tea.TeaError' },
     exceptionRetryable: { name: 'Tea.RetryableError' },
     exceptionUnretryable: { name: 'Tea.UnretryableError' },
+    retryPolicyContext: { name: 'Tea.RetryPolicyContext' },
   }
 };

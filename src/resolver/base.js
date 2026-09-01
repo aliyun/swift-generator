@@ -177,6 +177,10 @@ class BaseResolver {
         return this.resolveTypeItem(typeNode.paramType, typeNode);
       } else if (typeNode.type === 'array') {
         const subType = typeNode.subType ? typeNode.subType : typeNode.itemType;
+        if (!subType) {
+          // Parser 2.x may omit item type on some array props; fall back to generic.
+          return new TypeArray(new TypeGeneric());
+        }
         return new TypeArray(this.resolveTypeItem(subType));
       } else if (typeNode.type === 'moduleModel') {
         let tmp = [];
@@ -201,17 +205,30 @@ class BaseResolver {
       return new TypeBytes();
     } else if (typeNode === 'array') {
       let itemType;
-      if (sourceNode.fieldItemType.type === 'modelBody') {
+      if (!sourceNode) {
+        return new TypeArray(new TypeGeneric());
+      }
+      const fieldItemType = sourceNode.fieldItemType || sourceNode.subType || sourceNode.itemType;
+      if (!fieldItemType) {
+        itemType = new TypeGeneric();
+      } else if (fieldItemType.type === 'modelBody') {
         itemType = new TypeObject(`#${sourceNode.itemType ? sourceNode.itemType : prop}`);
-      } else if (sourceNode.fieldItemType.idType === 'model') {
-        itemType = new TypeObject(`#${sourceNode.fieldItemType.lexeme}`);
+      } else if (fieldItemType.idType === 'model') {
+        itemType = new TypeObject(`#${fieldItemType.lexeme}`);
+      } else if (fieldItemType.lexeme) {
+        itemType = this.resolveTypeItem(fieldItemType.lexeme, sourceNode, prop);
       } else {
-        itemType = this.resolveTypeItem(sourceNode.fieldItemType, sourceNode, sourceNode.itemType ? sourceNode.itemType : prop);
+        itemType = this.resolveTypeItem(fieldItemType, sourceNode, sourceNode.itemType ? sourceNode.itemType : prop);
       }
       return new TypeArray(itemType);
     } else if (typeNode === 'map') {
-      const keyType = this.resolveTypeItem(sourceNode.keyType);
-      const valType = this.resolveTypeItem(sourceNode.valueType);
+      if (!sourceNode) {
+        return new TypeMap(new TypeString(), new TypeGeneric());
+      }
+      const keyTypeNode = sourceNode.keyType;
+      const valTypeNode = sourceNode.valueType || sourceNode.valType;
+      const keyType = this.resolveTypeItem(keyTypeNode || 'string', sourceNode);
+      const valType = this.resolveTypeItem(valTypeNode || 'any', sourceNode);
       return new TypeMap(keyType, valType);
     } else if (typeNode === 'any') {
       return new TypeGeneric();
